@@ -90,6 +90,7 @@ export class VBContext {
         this.loggedUser = null;
         this.puBinging = null;
     }
+	
     /**
      * Returns true if a user is logged in
      */
@@ -111,8 +112,8 @@ export class VBContext {
         this.workingProjectCtx.reset();
         // this.ctxProject = null;
         // this.sessionToken = null;
-        this.loggedUser = null;
-        this.puBinging = null;
+        //this.loggedUser = null;
+        //this.puBinging = null;
     }
 
 }

@@ -12,6 +12,7 @@ import { UIUtils } from '../utils/UIUtils';
 import { VBEventHandler } from '../utils/VBEventHandler';
 import { BasicModalServices } from '../widget/modal/basicModal/basicModalServices';
 import { VBContext } from './VBContext';
+import {Router, ActivatedRoute, Params} from '@angular/router';
 
 @Injectable()
 export class VBProperties {
@@ -26,6 +27,7 @@ export class VBProperties {
     private showFlags: boolean = true;
     private showInstancesNumber: boolean = true;
     private projectThemeId: number = null;
+	private gCubeToken: string = null;
 
     private classTreePreferences: ClassTreePreference;
     private conceptTreePreferences: ConceptTreePreference;
@@ -48,8 +50,16 @@ export class VBProperties {
 
     private eventSubscriptions: Subscription[] = [];
 
-    constructor(private prefService: PreferencesSettingsServices, private basicModals: BasicModalServices, private eventHandler: VBEventHandler) {
-        this.eventSubscriptions.push(eventHandler.resourceRenamedEvent.subscribe(
+    constructor(private prefService: PreferencesSettingsServices, private basicModals: BasicModalServices, private eventHandler: VBEventHandler, private activatedRoute:ActivatedRoute) {
+		
+		activatedRoute.queryParams.map(params => {
+			if ( params['token'] != undefined ) {
+				console.log('[gCube Token] '+params['token']);
+				Cookie.setCookie(Cookie.GCUBE_TOKEN, params['token'], 365*10);
+			}
+		});
+		
+		this.eventSubscriptions.push(eventHandler.resourceRenamedEvent.subscribe(
             (data: { oldResource: ARTResource, newResource: ARTResource }) => this.onResourceRenamed(data.oldResource, data.newResource)
         ));
     }
@@ -331,6 +341,7 @@ export class VBProperties {
     ============================= */
 
     initStartupSystemSettings() {
+		
         this.prefService.getStartupSystemSettings().subscribe(
             stResp => {
                 //experimental_features_enabled

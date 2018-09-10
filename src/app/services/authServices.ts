@@ -29,7 +29,7 @@ export class AuthServices {
             stResp => {
                 var loggedUser: User = Deserializer.createUser(stResp);
                 VBContext.setLoggedUser(loggedUser);
-                return loggedUser;
+				return loggedUser;
             }
         );
 

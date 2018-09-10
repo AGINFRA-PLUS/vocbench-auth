@@ -16,13 +16,23 @@ export class User {
     private avatarUrl: string;
     private languageProficiencies: string[];
     private status: UserStatusEnum;
+	private gCubeToken: string;
     private admin: boolean = false;
 
-    constructor(email: string, givenName: string, familyName: string, iri: string) {
+    /*constructor(email: string, givenName: string, familyName: string, iri: string) {
         this.email = email;
         this.givenName = givenName;
         this.familyName = familyName;
         this.iri = iri;
+    }*/
+	
+	constructor(email: string, givenName: string, familyName: string, avatarUrl: string, gCubeToken: string) {
+        this.email = email;
+        this.givenName = givenName;
+        this.familyName = familyName;
+		this.avatarUrl = avatarUrl;
+		this.gCubeToken = gCubeToken;
+		this.status = UserStatusEnum.ACTIVE;
     }
 
     getEmail(): string {
@@ -79,6 +89,14 @@ export class User {
 
     getAddress(): string {
         return this.address;
+    }
+	
+	setGcubeToken(gCubeToken: string) {
+        this.gCubeToken = gCubeToken;
+    }
+	
+	getGcubeToken(): string {
+        return this.gCubeToken;
     }
 
     setRegistrationDate(registrationDate: Date) {

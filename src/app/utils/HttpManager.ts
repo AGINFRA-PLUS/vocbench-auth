@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers, Response, ResponseContentType, RequestOptions } from '@angular/http';
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute, Params } from '@angular/router';
 import 'rxjs/Rx'; //for map function
 import { Observable } from 'rxjs/Observable';
 import { STResponseUtils } from "../utils/STResponseUtils";
@@ -27,7 +27,7 @@ export class HttpManager {
         errorAlertOpt: { show: true, exceptionsToSkip: [] }
     });
 
-    constructor(private http: Http, private router: Router, private basicModals: BasicModalServices) {
+    constructor(private http: Http, private router: Router, private basicModals: BasicModalServices, private activatedRoute: ActivatedRoute) {
         require('file-loader?name=[name].[ext]!../../vbconfig.js'); //this makes webpack copy vbconfig.js to dist folder during the build
 
         this.serverhost = window['st_protocol'] + "://"; //protocol (http/https)
@@ -63,31 +63,57 @@ export class HttpManager {
      * @param options further options that overrides the default ones
      */
     doGet(service: string, request: string, params: any, options?: VBRequestOptions) {
-        options = this.defaultRequestOptions.merge(options);
+		
+		
+		
+		var url: string;
+		var headers = new Headers();
+		let value : any;
+		
+		if (request == 'getGcubeData') {
+			url = 'https://socialnetworking1.d4science.org/social-networking-library-ws/rest/2/people/profile';
+			
+			headers.append("gcube-token", params.gCubeToken);
+			headers.append('Accept', STResponseUtils.contentTypeJson);
+			var requestOptions = new RequestOptions({ headers: headers, withCredentials: false });
 
-        var url: string = this.getRequestBaseUrl(service, request);
+		}
+		else if (request == 'getGcubeEmail'){
+			url = 'https://socialnetworking1.d4science.org/social-networking-library-ws/rest/2/users/get-email';
+			
+			headers.append("gcube-token", params.gCubeToken);
+			headers.append('Accept', STResponseUtils.contentTypeJson);
+			var requestOptions = new RequestOptions({ headers: headers, withCredentials: false });
+		}
+		else {
+			options = this.defaultRequestOptions.merge(options);
+			
+			url = this.getRequestBaseUrl(service, request);
+			//add parameters
+			url += this.getParametersForUrl(params);
+			url += this.getContextParametersForUrl(options);
+			
+			console.log("[GET]: " + url);
+		
+			headers.append('Accept', STResponseUtils.contentTypeJson);
+			var requestOptions = new RequestOptions({ headers: headers, withCredentials: true });
 
-        //add parameters
-        url += this.getParametersForUrl(params);
-        url += this.getContextParametersForUrl(options);
-
-        console.log("[GET]: " + url);
-
-        var headers = new Headers();
-        headers.append('Accept', STResponseUtils.contentTypeJson);
-        var requestOptions = new RequestOptions({ headers: headers, withCredentials: true });
-
-        //execute request
-        return this.http.get(url, requestOptions)
-            .map(res => {
-                return this.handleJsonXmlResponse(res);
-            })
-            .map(res => { 
-                return this.handleOkOrErrorResponse(res); 
-            })
-            .catch(error => {
-                return this.handleError(error, options.errorAlertOpt);
-            });
+			console.log(requestOptions);
+			
+		}
+		//execute request
+			return this.http.get(url, requestOptions)
+				.map(res => {
+					return this.handleJsonXmlResponse(res);
+				})
+				.map(res => { 
+					return this.handleOkOrErrorResponse(res); 
+				})
+				.catch(error => {
+					return this.handleError(error, options.errorAlertOpt);
+				});
+		
+        
     }
 
     /**
@@ -125,8 +151,13 @@ export class HttpManager {
             .map(res => {
                 return this.handleJsonXmlResponse(res);
             })
-            .map(res => { 
-                return this.handleOkOrErrorResponse(res); 
+            .map(res => {
+				if (request == 'registerUser') {
+					return null;
+				}
+				else {
+					return this.handleOkOrErrorResponse(res);
+				}					
             })
             .catch(error => {
                 return this.handleError(error, options.errorAlertOpt);

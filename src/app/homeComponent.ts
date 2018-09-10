@@ -1,11 +1,11 @@
-import { Component } from "@angular/core";
-import { Router } from "@angular/router";
 import { Modal, BSModalContextBuilder } from 'ngx-modialog/plugins/bootstrap';
 import { OverlayConfig } from 'ngx-modialog';
 import { ProjectListModal } from './project/projectListModal';
 import { VBContext } from "./utils/VBContext";
 import { User } from "./models/User";
 import { Languages, Language } from "./models/LanguagesCountries";
+import {Router} from '@angular/router';
+import {Component} from '@angular/core';
 
 @Component({
     selector: "home-component",

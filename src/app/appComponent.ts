@@ -17,8 +17,9 @@ import '../assets/styles/style.css';
 export class AppComponent {
 
     private appVersion = require('../../package.json').version;
+	
 
-    constructor(private vbProp: VBProperties) {}
+    constructor(private vbProp: VBProperties) { }
 
     ngOnInit() {
         this.vbProp.initStartupSystemSettings();

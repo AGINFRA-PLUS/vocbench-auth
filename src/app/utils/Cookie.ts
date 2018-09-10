@@ -28,6 +28,8 @@ export class Cookie {
 	public static PROJECT_TABLE_ORDER = "project.table_columns_order";
 
 	public static WARNING_CUSTOM_ROOT = "ui.tree.cls.warnings.customroot";
+	
+	public static GCUBE_TOKEN = "config.gcube_token";
 
 	/**
 	 * Retrieves a single cookie by it's name

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute, Params } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { Deserializer } from "../utils/Deserializer";
 import { HttpManager } from "../utils/HttpManager";
@@ -7,12 +7,15 @@ import { VBContext } from "../utils/VBContext";
 import { AuthorizationEvaluator } from "../utils/AuthorizationEvaluator";
 import { User, UserStatusEnum } from "../models/User";
 import { ARTURIResource } from "../models/ARTResources";
+import { AuthServices } from "../services/AuthServices";
+import { Cookie } from '../utils/Cookie';
+import 'rxjs/add/operator/toPromise';
 
 @Injectable()
 export class UserServices {
 
     private serviceName = "Users";
-
+	
     constructor(private httpMgr: HttpManager, private router: Router) { }
 
     /**
@@ -20,24 +23,82 @@ export class UserServices {
      * Returns null if no user is logged (response contains empty user object).
      * Throw exception if no user is register at all (in this case the response of getUser() is empty).
      */
-    getUser(): Observable<User> {
+    getUser(): Observable<any> {
         console.log("[UserServices] getUser");
-        var params: any = {}
-        return this.httpMgr.doGet(this.serviceName, "getUser", params).map(
-            stResp => {
-                if (stResp.user != null) { //user object in respnse => serialize it (it could be empty, so no user logged)
-                    let user: User = Deserializer.createUser(stResp.user);
-                    if (user != null) {
-                        VBContext.setLoggedUser(user);
+        
+		var params: any = {};
+		var gCubeToken = Cookie.getCookie(Cookie.GCUBE_TOKEN);
+		console.log(gCubeToken);
+		
+		var auth = new AuthServices(this.httpMgr, this.router);
+		
+		let gCubeParams: any = {
+            gCubeToken: gCubeToken
+        }
+		
+		let user = Observable.forkJoin(
+			this.httpMgr.doGet(this.serviceName, "getUser", params).map((stResp) => stResp),
+			this.httpMgr.doGet(this.serviceName, "getGcubeData", gCubeParams).map((resp) => resp),
+			this.httpMgr.doGet(this.serviceName, "getGcubeEmail", gCubeParams).map((eResp) => eResp)
+		)
+		.subscribe(
+		  data => {
+			  
+			let gCubeEmail = data[2];
+			let gCubeData = data[1];
+			let userData = data[0];
+			console.log(data);
+			
+			if (userData.user != null) { //user object in respnse => serialize it (it could be empty, so no user logged)
+                    let user: User = Deserializer.createUser(userData.user);
+				
+                    if (user != null) {		
+						VBContext.setLoggedUser(user);
+						return auth.login(gCubeEmail, gCubeToken, true).subscribe();
+						//return user;
                     }
-                    return user;
-                } else { //no user object in the response => there is no user registered
-                    this.router.navigate(["/Registration/1"]);
-                }
-            }
-        );
+					else {
+						return this.registerUser(gCubeEmail, gCubeToken, gCubeData.fullname.split(" ")[0], gCubeData.fullname.split(" ")[1], null, null, "", "", "", "", "", gCubeData.avatar, "", null).subscribe(
+								(newUser:any) => {
+									if (newUser == null) {
+										var userJson = '{"user":{"email":"'+gCubeEmail+'","iri":"","givenName":"'+gCubeData.fullname.split(" ")[0]+'","familyName":"'+gCubeData.fullname.split(" ")[1]+'","birthday":null,"gender":null,"country":null,"address":null,"registrationDate":"2018-06-07","affiliation":null,"url":null,"avatarUrl":"'+gCubeData.avatar+'","phone":null,"status":"ACTIVE","admin":true,"languageProficiencies":[]}}';
+										newUser = Deserializer.createUser(JSON.parse(userJson).user);				
+										
+									}	
+									VBContext.setLoggedUser(newUser);
+									
+									return auth.login(gCubeEmail, gCubeToken, true).subscribe();
+								},
+								err => console.error(err)
+							);
+					}
+					
+			} else { //no user object in the response => there is no user registered
+			alert('1');
+				if (gCubeToken == null) {
+					this.router.navigate(["/Registration/1"]);
+				}
+			}
+		  },
+		  err => console.error(err)
+		);
+		/*if (user != null) {
+			console.log(user);
+		}
+		else {
+			console.log('shit');
+		}*/
+		//return null;
+		return null;
+		
     }
 
+	//setLoggedUser( user: User ) {
+	//	console.log(user);
+	//	VBContext.setLoggedUser(user);
+	//	console.log(VBContext.getLoggedUser());
+	//}
+	
     /**
      * Lists all the registered users
      */

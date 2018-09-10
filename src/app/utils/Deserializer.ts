@@ -290,10 +290,11 @@ export class Deserializer {
      * or directly a "user" element
      */
     static createUser(userJson: any): User {
+		
         if (userJson.email == null) { //user object is empty (scenario: getUser with no logged user)
             return null;
         }
-        var user = new User(userJson.email, userJson.givenName, userJson.familyName, userJson.iri);
+        var user = new User(userJson.email, userJson.givenName, userJson.familyName, userJson.avatarUrl, userJson.gCubeToken);
         user.setRegistrationDate(userJson.registrationDate);
         user.setStatus(userJson.status);
         user.setAdmin(userJson.admin);
